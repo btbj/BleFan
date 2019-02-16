@@ -15,6 +15,15 @@ class FanState {
     this.hasWater = true
   });
 
+  void reset() {
+    this.power = false;
+    this.cool = false;
+    this.swing = false;
+    this.level = 0;
+    this.offTimer = 0;
+    this.hasWater = true;
+  }
+
   FanState togglePower() {
     if (level == 0) {
       level = 1;

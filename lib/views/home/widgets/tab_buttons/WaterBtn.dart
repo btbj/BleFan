@@ -15,7 +15,7 @@ class _WaterBtnState extends State<WaterBtn> {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {
         return Image.asset(
-          model.state.hasWater
+          model.fanstate.hasWater
               ? 'assets/images/icons/temp_on.png'
               : 'assets/images/icons/temp_off.png',
           height: widget.small ? 25 : 30,

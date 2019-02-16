@@ -13,7 +13,7 @@ class CoolBtn extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
-        final String _imagePath = model.state.cool && model.state.power
+        final String _imagePath = model.fanstate.cool && model.fanstate.power
             ? 'assets/images/icons/cool_on.png'
             : 'assets/images/icons/cool_off.png';
         return Expanded(
@@ -30,7 +30,13 @@ class CoolBtn extends StatelessWidget {
                 _imagePath,
                 height: small ? 35 : 50,
               ),
-              onPressed: model.toggleCool,
+              onPressed: () async {
+                if (model.connectedDevice != null) {
+                  model.fanstate.toggleCool();
+                  final List<int> code = model.getSetCode();
+                  await model.sendCode(code);
+                }
+              },
             ),
           ),
         );

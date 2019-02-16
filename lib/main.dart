@@ -37,6 +37,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
+  void disconnectDevice() async {
+    if (_mainModel.connectedDevice != null) {
+      await _mainModel.bleDisconnectDevice();
+      _mainModel.resetFanstate();
+    }
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +64,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     switch (state) {
       case AppLifecycleState.paused:
         print('on pause');
-        await _mainModel.bleDisconnectDevice();
+        disconnectDevice();
         break;
       default:
     }

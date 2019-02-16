@@ -15,7 +15,7 @@ class FanLevelBtn extends StatelessWidget {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
         final String _imagePath =
-            model.state.level == level && model.state.power
+            model.fanstate.level == level && model.fanstate.power
                 ? 'assets/images/icons/fan${level}_on.png'
                 : 'assets/images/icons/fan${level}_off.png';
         return Expanded(
@@ -38,8 +38,12 @@ class FanLevelBtn extends StatelessWidget {
                 _imagePath,
                 height: small ? 20 : 30,
               ),
-              onPressed: () {
-                model.setLevel(level);
+              onPressed: () async {
+                if (model.connectedDevice != null) {
+                  model.fanstate.setLevel(level);
+                  final List<int> code = model.getSetCode();
+                  await model.sendCode(code);
+                }
               },
             ),
           ),

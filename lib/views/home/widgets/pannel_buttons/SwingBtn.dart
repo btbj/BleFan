@@ -14,7 +14,7 @@ class SwingBtn extends StatelessWidget {
 
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
-        final String _imagePath = model.state.swing && model.state.power
+        final String _imagePath = model.fanstate.swing && model.fanstate.power
             ? 'assets/images/icons/swing_on.png'
             : 'assets/images/icons/swing_off.png';
         return Expanded(
@@ -27,7 +27,13 @@ class SwingBtn extends StatelessWidget {
                 _imagePath,
                 height: small ? 35 : 50,
               ),
-              onPressed: model.toggleSwing,
+              onPressed: () async {
+                if (model.connectedDevice != null) {
+                  model.fanstate.toggleSwing();
+                  final List<int> code = model.getSetCode();
+                  await model.sendCode(code);
+                }
+              },
             ),
           ),
         );

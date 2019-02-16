@@ -40,12 +40,16 @@ class OffTimerBtn extends StatelessWidget {
                     child: Text(
                       '$hours$unit',
                       style: TextStyle(
-                          color: model.state.offTimer == hours && model.state.power
+                          color: model.fanstate.offTimer == hours && model.fanstate.power
                               ? Color.fromARGB(255, 52, 152, 219)
                               : Colors.grey),
                     ),
-                    onPressed: () {
-                      model.setOffTimer(hours);
+                    onPressed: () async {
+                      if (model.connectedDevice != null) {
+                        model.fanstate.setOffTimer(hours);
+                        final List<int> code = model.getSetCode();
+                        await model.sendCode(code);
+                      }
                     },
                   )
                 : Container(),

@@ -10,14 +10,16 @@ class DeviceStore {
     final prefs = await SharedPreferences.getInstance();
 
     String savedString = (prefs.getString(key) ?? '{}');
-    print(savedString);
+    // print(savedString);
     final savedDevices = jsonDecode(savedString);
-    print(savedDevices);
+    // print(savedDevices);
     return savedDevices;
   }
 
   Future saveDevice(String deviceId) async {
     final savedDevices = await getSavedDevices();
+    if (savedDevices.containsKey(deviceId)) return;
+
     savedDevices[deviceId] = {
       'id': deviceId,
       'name': deviceId
@@ -25,5 +27,6 @@ class DeviceStore {
     final prefs = await SharedPreferences.getInstance();
     final newDataString = jsonEncode(savedDevices);
     prefs.setString(key, newDataString);
+    return;
   }
 }

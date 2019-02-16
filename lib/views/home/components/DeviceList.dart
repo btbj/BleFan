@@ -3,9 +3,55 @@ import 'package:scoped_model/scoped_model.dart';
 import 'package:flutter_blue/flutter_blue.dart';
 
 import '../../../scoped-models/main_model.dart';
+import '../../../utils/StoreHelper.dart';
 
-class DeviceList extends StatelessWidget {
-  Widget _buildTitleRow(MainModel model) {
+class DeviceList extends StatefulWidget {
+  @override
+  _DeviceListState createState() => _DeviceListState();
+}
+
+class _DeviceListState extends State<DeviceList> {
+  MainModel _model;
+  final DeviceStore sharedStore = DeviceStore();
+
+  @override
+  void initState() {
+    print('initstate devicelist');
+    super.initState();
+    _model = ScopedModel.of<MainModel>(context);
+    disconnectDevice();
+    _model.bleStartScan();
+  }
+
+  void disconnectDevice() {
+    if (_model.connectedDevice != null) {
+      _model.bleDisconnectDevice();
+      _model.resetFanstate();
+    }
+  }
+
+  void connectDevice(ScanResult scanResult) async {
+    print('connect device: ${scanResult.device.name}');
+    // model.bleConnectDevice(scanResult);
+    _model.bleConnectDevice(scanResult).onData((s) async {
+      if (s == BluetoothDeviceState.connected) {
+        print('connected');
+        _model.connectedDevice = scanResult.device;
+        await _model.bleScanServices();
+        _model.setNotificationCallback(_model.setNewState);
+        checkDeviceCurrentState();
+        await sharedStore.saveDevice(_model.connectedDevice.id.toString());
+        Navigator.pop(context);
+      }
+    });
+  }
+
+  void checkDeviceCurrentState() {
+    final List<int> code = _model.getCheckCode();
+    _model.sendCode(code);
+  }
+
+  Widget _buildTitleRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: <Widget>[
@@ -16,15 +62,15 @@ class DeviceList extends StatelessWidget {
           child: IconButton(
             padding: EdgeInsets.all(0.0),
             icon: Icon(
-              model.scanning ? Icons.cancel : Icons.refresh,
+              _model.scanning ? Icons.cancel : Icons.refresh,
               size: 24,
             ),
             onPressed: () {
               print('refresh');
-              if (model.scanning) {
-                model.bleStopScan();
+              if (_model.scanning) {
+                _model.bleStopScan();
               } else {
-                model.bleStartScan();
+                _model.bleStartScan();
               }
             },
           ),
@@ -33,9 +79,9 @@ class DeviceList extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildDeviceListTiles(MainModel model, BuildContext context) {
+  List<Widget> _buildDeviceListTiles() {
     List<Widget> _listTailArray = [];
-    for (ScanResult scanResult in model.bleScanResult) {
+    for (ScanResult scanResult in _model.scanResultList) {
       final String _deviceName = scanResult.device.name != ''
           ? scanResult.device.name
           : 'unknow device';
@@ -44,22 +90,13 @@ class DeviceList extends StatelessWidget {
         leading: Icon(Icons.devices),
         title: Text(_deviceName),
         trailing: Text(rssi.toString()),
-        onTap: () async {
-          print('connect device: ${scanResult.device.name}');
-          // model.bleConnectDevice(scanResult);
-          model.bleConnectDevice(scanResult).onData((s) async {
-            if (s == BluetoothDeviceState.connected) {
-              print('connected');
-              model.connectedDevice = scanResult.device;
-              await model.bleScanServices();
-              Navigator.pop(context);
-            }
-          });
+        onTap: () {
+          connectDevice(scanResult);
         },
       );
       _listTailArray.add(item);
     }
-    if (model.scanning) {
+    if (_model.scanning) {
       Widget loadingListTail = Container(
         margin: EdgeInsets.symmetric(vertical: 5.0),
         child: Center(
@@ -80,10 +117,17 @@ class DeviceList extends StatelessWidget {
     return ScopedModelDescendant<MainModel>(
       builder: (BuildContext context, Widget child, MainModel model) {
         return SimpleDialog(
-          title: _buildTitleRow(model),
-          children: _buildDeviceListTiles(model, context),
+          title: _buildTitleRow(),
+          children: _buildDeviceListTiles(),
         );
       },
     );
+  }
+
+  @override
+  void dispose() {
+    print('dispose');
+    _model.bleStopScan();
+    super.dispose();
   }
 }
