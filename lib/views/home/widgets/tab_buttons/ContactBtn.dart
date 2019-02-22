@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../utils/StoreHelper.dart';
 
 class ContactBtn extends StatelessWidget {
   final bool small;
-  final DeviceStore sharedStore = DeviceStore();
   ContactBtn({this.small});
 
   @override
@@ -16,11 +14,8 @@ class ContactBtn extends StatelessWidget {
             'assets/images/icons/contact.png',
             height: small ? 27 : 34,
           ),
-          onPressed: () async {
+          onPressed: () {
             print('contact');
-            final storedDevices = await sharedStore.getSavedDevices();
-            final aaa = storedDevices.containsKey('test');
-            print(aaa);
           },
         ),
       ),

@@ -30,11 +30,10 @@ class CoolBtn extends StatelessWidget {
                 _imagePath,
                 height: small ? 35 : 50,
               ),
-              onPressed: () async {
-                if (model.connectedDevice != null) {
+              onPressed: () {
+                if (model.connected) {
                   model.fanstate.toggleCool();
-                  final List<int> code = model.getSetCode();
-                  await model.sendCode(code);
+                  model.sendNewState();
                 }
               },
             ),

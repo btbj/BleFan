@@ -6,6 +6,7 @@ import 'package:flutter_blue/flutter_blue.dart';
 import '../../components/DeviceList.dart';
 import '../../../../scoped-models/main_model.dart';
 import '../../../../utils/StoreHelper.dart';
+import '../../../../utils/BleManager.dart';
 
 class SelectionBtn extends StatefulWidget {
   final bool small;
@@ -18,6 +19,9 @@ class SelectionBtn extends StatefulWidget {
 class _SelectionBtnState extends State<SelectionBtn> {
   Timer _stopScanAndPopDialogTimer;
   MainModel _model;
+  BleManager _bleManager = BleManager();
+  final List<ScanResult> _scanResultList = [];
+  bool _scanning = false;
   final DeviceStore sharedStore = DeviceStore();
 
   @override
@@ -25,18 +29,33 @@ class _SelectionBtnState extends State<SelectionBtn> {
     print('init state');
     super.initState();
     _model = ScopedModel.of<MainModel>(context);
-    _model.bleStartScan();
+    startScan();
     _stopScanAndPopDialogTimer =
         Timer(Duration(seconds: 3), checkQuickScanResult);
   }
 
+  void startScan() {
+    setState(() {
+      _scanning = true;
+    });
+    _bleManager.startScan().onData((ScanResult scanResult) {
+      final int index = _scanResultList
+          .indexWhere((item) => item.device.id == scanResult.device.id);
+      if (index == -1) {
+        _scanResultList.add(scanResult);
+      } else {
+        _scanResultList[index] = scanResult;
+      }
+    });
+  }
+
   Widget _buildDeviceName() {
     String _deviceState = 'No Device';
-    if (_model.scanning) _deviceState = 'Scanning';
-    if (_model.connectedDevice != null) {
-      _deviceState = _model.connectedDevice.name == ''
+    if (_scanning) _deviceState = 'Scanning';
+    if (_bleManager.connectedDevice != null) {
+      _deviceState = _bleManager.connectedDevice.name == ''
           ? 'No Name'
-          : _model.connectedDevice.name;
+          : _bleManager.connectedDevice.name;
     }
     return Text(_deviceState);
   }
@@ -53,12 +72,15 @@ class _SelectionBtnState extends State<SelectionBtn> {
 
   void checkQuickScanResult() async {
     print('check scan result');
-    _model.bleStopScan();
+    _bleManager.stopScan();
+    setState(() {
+      _scanning = false;
+    });
     final Map<String, dynamic> storedDevices =
         await sharedStore.getSavedDevices();
     print(storedDevices);
     List<ScanResult> matchedList = [];
-    for (ScanResult scanResult in _model.scanResultList) {
+    for (ScanResult scanResult in _scanResultList) {
       final String id = scanResult.device.id.toString();
 
       if (storedDevices.containsKey(id)) {
@@ -69,28 +91,32 @@ class _SelectionBtnState extends State<SelectionBtn> {
       print('match one');
       connectDevice(matchedList[0]);
     } else if (matchedList.length > 1) {
-      popDialog(context).then((_) {});
+      popDialog(context).then((_) {
+        setState(() {
+          _scanning = false;
+        });
+      });
     }
   }
 
   void connectDevice(ScanResult scanResult) async {
     print('connect device: ${scanResult.device.name}');
     // model.bleConnectDevice(scanResult);
-    _model.bleConnectDevice(scanResult).onData((s) async {
+    _bleManager.connectDevice(scanResult).onData((s) async {
       if (s == BluetoothDeviceState.connected) {
         print('connected');
-        _model.connectedDevice = scanResult.device;
-        await _model.bleScanServices();
-        _model.setNotificationCallback(_model.setNewState);
+        _bleManager.connectedDevice = scanResult.device;
+        await _bleManager.scanServices();
+        _bleManager.setNotificationCallback(_model.setNewState);
         checkDeviceCurrentState();
-        await sharedStore.saveDevice(_model.connectedDevice.id.toString());
+        await sharedStore.saveDevice(_bleManager.connectedDevice.id.toString());
       }
     });
   }
 
   void checkDeviceCurrentState() {
     final List<int> code = _model.getCheckCode();
-    _model.sendCode(code);
+    _bleManager.sendCode(code);
   }
 
   Widget _buildFlatBtn() {
@@ -100,7 +126,11 @@ class _SelectionBtnState extends State<SelectionBtn> {
           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 25.0),
           child: _buildDeviceName(),
           onPressed: () {
-            popDialog(context).then((_) {});
+            popDialog(context).then((_) {
+              setState(() {
+                _scanning = false;
+              });
+            });
           },
         );
       },

@@ -27,10 +27,9 @@ class PowerBtn extends StatelessWidget {
                 height: small ? 35 : 50,
               ),
               onPressed: () async {
-                if (model.connectedDevice != null) {
+                if (model.connected) {
                   model.fanstate.togglePower();
-                  final List<int> code = model.getSetCode();
-                  await model.sendCode(code);
+                  model.sendNewState();
                 }
               },
             ),

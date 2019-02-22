@@ -5,6 +5,7 @@ import 'package:scoped_model/scoped_model.dart';
 import './views/home/home.dart';
 // import './scoped-models/fan_state.dart';
 import './scoped-models/main_model.dart';
+import './utils/BleManager.dart';
 
 void main() async {
   // 设置不能横屏
@@ -24,6 +25,7 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final MainModel _mainModel = MainModel();
   // AppLifecycleState _lastLifecycleState;
+  final BleManager _bleManager = BleManager();
 
   @override
   void initState() {
@@ -38,8 +40,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   }
 
   void disconnectDevice() async {
-    if (_mainModel.connectedDevice != null) {
-      await _mainModel.bleDisconnectDevice();
+    if (_mainModel.connected) {
+      await _bleManager.disconnectDevice();
       _mainModel.resetFanstate();
     }
   }

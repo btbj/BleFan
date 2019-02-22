@@ -28,10 +28,9 @@ class SwingBtn extends StatelessWidget {
                 height: small ? 35 : 50,
               ),
               onPressed: () async {
-                if (model.connectedDevice != null) {
+                if (model.connected) {
                   model.fanstate.toggleSwing();
-                  final List<int> code = model.getSetCode();
-                  await model.sendCode(code);
+                  model.sendNewState();
                 }
               },
             ),
