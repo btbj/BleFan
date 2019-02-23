@@ -53,9 +53,7 @@ class _SelectionBtnState extends State<SelectionBtn> {
     String _deviceState = 'No Device';
     if (_scanning) _deviceState = 'Scanning';
     if (_bleManager.connectedDevice != null) {
-      _deviceState = _bleManager.connectedDevice.name == ''
-          ? 'No Name'
-          : _bleManager.connectedDevice.name;
+      _deviceState = _bleManager.deviceName;
     }
     return Text(_deviceState);
   }
@@ -109,7 +107,7 @@ class _SelectionBtnState extends State<SelectionBtn> {
         await _bleManager.scanServices();
         _bleManager.setNotificationCallback(_model.setNewState);
         checkDeviceCurrentState();
-        await sharedStore.saveDevice(_bleManager.connectedDevice.id.toString());
+        await sharedStore.saveDevice(_bleManager.connectedDevice);
       }
     });
   }

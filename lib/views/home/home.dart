@@ -7,6 +7,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       body: SafeArea(
         child: Container(
           alignment: Alignment.topCenter,

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../../../utils/StoreHelper.dart';
+// import '../../../../utils/StoreHelper.dart';
 
 class DocumentBtn extends StatelessWidget {
   final bool small;
-  final DeviceStore sharedStore = DeviceStore();
+  // final DeviceStore sharedStore = DeviceStore();
   DocumentBtn({this.small});
 
   @override
@@ -18,7 +18,7 @@ class DocumentBtn extends StatelessWidget {
           ),
           onPressed: () {
             print('document');
-            sharedStore.saveDevice('test');
+            // sharedStore.saveDevice('test');
           },
         ),
       ),

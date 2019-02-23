@@ -15,6 +15,7 @@ class _DeviceListState extends State<DeviceList> {
   MainModel _model;
   final BleManager bleManager = BleManager();
   final DeviceStore sharedStore = DeviceStore();
+  Map<String, dynamic> storedDevice;
 
   final List<ScanResult> _scanResultList = [];
   bool _isScanning = false;
@@ -35,10 +36,11 @@ class _DeviceListState extends State<DeviceList> {
     });
   }
 
-  void startScan() {
+  void startScan() async {
     setState(() {
       _isScanning = true;
     });
+    storedDevice = await sharedStore.getSavedDevices();
     bleManager.startScan().onData((ScanResult scanResult) {
       final int index = _scanResultList
           .indexWhere((item) => item.device.id == scanResult.device.id);
@@ -68,7 +70,8 @@ class _DeviceListState extends State<DeviceList> {
         await bleManager.scanServices();
         bleManager.setNotificationCallback(_model.setNewState);
         checkDeviceCurrentState();
-        await sharedStore.saveDevice(bleManager.connectedDevice.id.toString());
+        bleManager.deviceName = getDeviceName(scanResult.device);
+        await sharedStore.saveDevice(bleManager.connectedDevice);
         Navigator.pop(context);
       }
     });
@@ -113,13 +116,24 @@ class _DeviceListState extends State<DeviceList> {
     );
   }
 
+  String getDeviceName(BluetoothDevice device) {
+    String result = 'unknow device';
+    if (device.name != '') {
+      result = device.name;
+    }
+    if (storedDevice.containsKey(device.id.toString())) {
+      print('stored');
+      result = storedDevice[device.id.toString()]['name'];
+    }
+    return result;
+  }
+
   List<Widget> _buildDeviceListTiles() {
     List<Widget> _listTailArray = [];
     for (ScanResult scanResult in _scanResultList) {
-      final String _deviceName = scanResult.device.name != ''
-          ? scanResult.device.name
-          : 'unknow device';
+      final String _deviceName = getDeviceName(scanResult.device);
       final int rssi = scanResult.rssi;
+
       Widget item = ListTile(
         leading: Icon(Icons.devices),
         title: Text(_deviceName),

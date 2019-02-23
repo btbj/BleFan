@@ -20,6 +20,7 @@ class BleManager {
   final String targetUUIDString = '0000ffe1-0000-1000-8000-00805f9b34fb';
   BluetoothDevice connectedDevice;
   BluetoothCharacteristic targetChar;
+  String deviceName = '';
 
   StreamSubscription<ScanResult> _scanSubscription;
   StreamSubscription<BluetoothDeviceState> _deviceConnection;
@@ -55,6 +56,7 @@ class BleManager {
       return;
     }
     this.connectedDevice = null;
+    this.deviceName = '';
     await _deviceConnection.cancel();
     return;
   }
