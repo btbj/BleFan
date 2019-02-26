@@ -45,7 +45,7 @@ class OffTimerBtn extends StatelessWidget {
                               : Colors.grey),
                     ),
                     onPressed: () async {
-                      if (model.connected) {
+                      if (model.connected && model.fanstate.power) {
                         model.fanstate.setOffTimer(hours);
                         model.sendNewState();
                       }

@@ -39,7 +39,7 @@ class FanLevelBtn extends StatelessWidget {
                 height: small ? 20 : 30,
               ),
               onPressed: () async {
-                if (model.connected) {
+                if (model.connected && model.fanstate.power) {
                   model.fanstate.setLevel(level);
                   model.sendNewState();
                 }

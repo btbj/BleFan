@@ -31,7 +31,7 @@ class CoolBtn extends StatelessWidget {
                 height: small ? 35 : 50,
               ),
               onPressed: () {
-                if (model.connected) {
+                if (model.connected && model.fanstate.power) {
                   model.fanstate.toggleCool();
                   model.sendNewState();
                 }
