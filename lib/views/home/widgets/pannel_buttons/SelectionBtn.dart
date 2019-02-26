@@ -24,6 +24,7 @@ class _SelectionBtnState extends State<SelectionBtn> {
   final List<ScanResult> _scanResultList = [];
   bool _scanning = false;
   final DeviceStore sharedStore = DeviceStore();
+  Map<String, dynamic> storedDevice;
 
   @override
   void initState() {
@@ -83,20 +84,32 @@ class _SelectionBtnState extends State<SelectionBtn> {
     );
   }
 
+  String getDeviceName(BluetoothDevice device) {
+    String result = 'unknow device';
+    if (device.name != '') {
+      result = device.name;
+    }
+    if (storedDevice.containsKey(device.id.toString())) {
+      // print('stored');
+      result = storedDevice[device.id.toString()]['name'];
+    }
+    return result;
+  }
+
   void checkQuickScanResult() async {
     print('check scan result');
     _bleManager.stopScan();
     setState(() {
       _scanning = false;
     });
-    final Map<String, dynamic> storedDevices =
+    storedDevice =
         await sharedStore.getSavedDevices();
-    print(storedDevices);
+    print(storedDevice);
     List<ScanResult> matchedList = [];
     for (ScanResult scanResult in _scanResultList) {
       final String id = scanResult.device.id.toString();
 
-      if (storedDevices.containsKey(id)) {
+      if (storedDevice.containsKey(id)) {
         matchedList.add(scanResult);
       }
     }
@@ -122,6 +135,7 @@ class _SelectionBtnState extends State<SelectionBtn> {
         await _bleManager.scanServices();
         _bleManager.setNotificationCallback(_model.setNewState);
         checkDeviceCurrentState();
+        _bleManager.deviceName = getDeviceName(scanResult.device);
         await sharedStore.saveDevice(_bleManager.connectedDevice);
       }
     });
