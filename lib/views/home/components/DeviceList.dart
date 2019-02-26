@@ -122,7 +122,7 @@ class _DeviceListState extends State<DeviceList> {
       result = device.name;
     }
     if (storedDevice.containsKey(device.id.toString())) {
-      print('stored');
+      // print('stored');
       result = storedDevice[device.id.toString()]['name'];
     }
     return result;

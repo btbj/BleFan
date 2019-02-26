@@ -7,6 +7,7 @@ import '../../components/DeviceList.dart';
 import '../../../../scoped-models/main_model.dart';
 import '../../../../utils/StoreHelper.dart';
 import '../../../../utils/BleManager.dart';
+import '../../components/AlertBox.dart' as alertBox;
 
 class SelectionBtn extends StatefulWidget {
   final bool small;
@@ -29,9 +30,21 @@ class _SelectionBtnState extends State<SelectionBtn> {
     print('init state');
     super.initState();
     _model = ScopedModel.of<MainModel>(context);
-    startScan();
-    _stopScanAndPopDialogTimer =
-        Timer(Duration(seconds: 3), checkQuickScanResult);
+    tryBleScan();
+  }
+
+  void tryBleScan() async {
+    final bool canScan = await _bleManager.checkState();
+    if (canScan) {
+      startScan();
+      _stopScanAndPopDialogTimer =
+          Timer(Duration(seconds: 3), checkQuickScanResult);
+    } else {
+      alertBox.popAlert(
+        context: context,
+        message: 'please check bluetooth state',
+      );
+    }
   }
 
   void startScan() {
@@ -59,7 +72,9 @@ class _SelectionBtnState extends State<SelectionBtn> {
   }
 
   Future popDialog(BuildContext context) {
-    _stopScanAndPopDialogTimer.cancel();
+    if (_stopScanAndPopDialogTimer != null) {
+      _stopScanAndPopDialogTimer.cancel();
+    }
     return showDialog(
       context: context,
       builder: (_) {
@@ -117,19 +132,29 @@ class _SelectionBtnState extends State<SelectionBtn> {
     _bleManager.sendCode(code);
   }
 
+  void tryScan() async {
+    final bool canScan = await _bleManager.checkState();
+    if (canScan) {
+      popDialog(context).then((_) {
+        setState(() {
+          _scanning = false;
+        });
+      });
+    } else {
+      alertBox.popAlert(
+        context: context,
+        message: 'please check bluetooth state',
+      );
+    }
+  }
+
   Widget _buildFlatBtn() {
     return ScopedModelDescendant(
       builder: (BuildContext context, Widget child, MainModel model) {
         return FlatButton(
           padding: EdgeInsets.symmetric(vertical: 0, horizontal: 25.0),
           child: _buildDeviceName(),
-          onPressed: () {
-            popDialog(context).then((_) {
-              setState(() {
-                _scanning = false;
-              });
-            });
-          },
+          onPressed: tryScan,
         );
       },
     );

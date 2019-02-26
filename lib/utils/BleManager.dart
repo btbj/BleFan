@@ -26,6 +26,12 @@ class BleManager {
   StreamSubscription<BluetoothDeviceState> _deviceConnection;
   StreamSubscription<List<int>> _notificationListener;
 
+  Future<bool> checkState() async {
+    final bool _isAvailable = await FlutterBlue.instance.isAvailable;
+    final bool _isOn = await FlutterBlue.instance.isOn;
+    return _isAvailable && _isOn;
+  }
+
   StreamSubscription<ScanResult> startScan() {
     print('start ble scan');
 
